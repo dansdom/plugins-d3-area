@@ -30,9 +30,25 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
     d3.Area.settings = {
         'height': '930',
         'width': '960',
+        'speed' : 2000,  // transition speed
         'margin': {top: 30, right: 10, bottom: 30, left: 30},
         'data' : null,  // I'll need to figure out how I want to present data options to the user
-        'dataRequest' : function(){}  // should I let them specific a request function or do it for them?
+        'dataUrl' : 'data.json',  // this is a url for a resource
+        'dataType' : 'json',
+        'colorRange' : [], // instead of defining a color array, I will set a color scale and then let the user overwrite it
+        // maybe only if there is one data set???
+        'colors' : {
+            'shape' : 'red',  // I'll have more than just circles here
+            'line' : 'green',  // the line on the graph
+            'area' : 'blue',  // I think if there are multiple areas, then I may use the colorRange
+            'dot' : 'black'
+        },
+        'fontSize' : 12,
+        'dataStructure' : {
+            'name' : 'name',
+            'value' : 'size'
+        },
+        'chartName' : false  // If there is a chart name then insert the value. This allows for deep exploration to show category name
     };
     
     // plugin functions go here
@@ -45,66 +61,94 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
             container.width = this.opts.width - container.margin.left - container.margin.right;
             container.height = this.opts.height - container.margin.top - container.margin.bottom; 
 
-            // define the data for the graph
-            if (typeof this.opts.data == "function") {
-                container.data = this.opts.data.call();
-            }
-            else {
-                this.setData(30);
-            }
-            // define the scales and axis
-            this.setScale();
-            this.setAxis();
-
             // build the chart with the data
-            this.buildChart(container.data);
+            this.getData();
 
         },
-        buildChart : function(data) {
+        updateChart : function() {
 
             var container = this;
 
+            // define the data for the graph
+            this.setData(30);
+            
+            this.setScale();
+            this.setAxis();
+
             // create the svg element that holds the chart
-            container.chart = d3.select(container.el).append("svg")
-                .datum(data)
-                .attr("width", container.width + container.margin.left + container.margin.right)
-                .attr("height", container.height + container.margin.top + container.margin.bottom)
-                .append("g")
-                .attr("transform", "translate(" + container.margin.left + "," + container.margin.top + ")");
-
-            // add the X and Y axis
-            container.chart.append("g")
-                .attr("class", "x axis")
-                .attr("transform", "translate(0," + container.height + ")")
-                .call(container.xAxis);
-
-            container.chart.append("g")
-                .attr("class", "y axis")
-                .call(container.yAxis);
+            this.setLayout();
 
             // define the line of the chart
             container.line = this.getLine();
             // define the area that sits under the line
             container.area = this.getArea();
 
+            // these two guys are going to need to be put into seperate functions that allow for multiple inputs
             // add the line
             container.chart.append("path")
                 .attr("class", "line")
-                .attr("d", container.line);
+                .attr("d", container.line)
+                .style("stroke", container.opts.colors.line)
             // add the area 
             container.chart.append("path")
                 .attr("class", "area")
-                .attr("d", container.area);
+                .attr("d", container.area)
+                .style("fill", container.opts.colors.shape);
             
+            // will put more options in here to specify the dots
             // add the dots to the line
             container.chart.selectAll(".dot")
-                .data(data.filter(function(d) { return d.y; }))
+                .data(container.data.filter(function(d) { return d.y; }))
                 .enter().append("circle")
                 .attr("class", "dot")
                 .attr("cx", container.line.x())
                 .attr("cy", container.line.y())
-                .attr("r", 3);
+                .attr("r", 3)
+                .style("fill", container.opts.colors.dot)
+                .style("stroke", container.opts.colors.line)
             
+        },
+        setLayout : function() {
+            var container = this;
+
+            // define the svg element
+            if (!container.svg) {
+                container.svg = d3.select(container.el).append("svg")      
+            }
+            container.svg
+                .datum(container.data)
+                .attr("width", container.width + container.margin.left + container.margin.right)
+                .attr("height", container.height + container.margin.top + container.margin.bottom);
+
+            // define the chart element
+            if (!container.chart) {
+                container.chart = container.svg
+                    .append("g")
+                    .attr("class", "chart")
+                    .attr("transform", "translate(" + container.margin.left + "," + container.margin.top + ")");
+            }
+
+            // define the X and Y axis
+            if (!container.X) {
+                container.X = container.chart.append("g")
+            }
+            container.X
+                .attr("class", "x-axis")
+                .attr("transform", "translate(0," + container.height + ")")
+                .style("fill", "none")  // I'm thinking about using the css file for these class styles. Will sleep on it
+                .style("stroke", "#000")
+                .style("shape-rendering", "crispEdges")
+                .call(container.xAxis);
+
+            if (!container.Y) {
+                container.Y = container.chart.append("g")
+            }
+            container.Y
+                .attr("class", "y-axis")
+                .style("fill", "none")
+                .style("stroke", "#000")
+                .style("shape-rendering", "crispEdges")
+                .call(container.yAxis);
         },
         getLine : function() {
             // the 'd' here is the data object AHA!!!
@@ -120,7 +164,11 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                 .y1(container.line.y())
                 .y0(container.yScale(0));
         },
-        updateData : function() {
+        parseData : function(data) {
+            return data;
+        },
+        // need to hook this up again
+        updateTheChartWithNewData : function() {
             var container = this,
                 data = container.data;
 
@@ -155,7 +203,7 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                 .attr("cx", container.line.x())
                 .attr("cy", container.line.y())
                 .style("stroke-opacity", 1)
-                .style("fill-opacity", 1)
+                .style("fill-opacity", 1);
 
             // remove the old ones
             circle.exit()
@@ -166,6 +214,18 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                 .style("fill-opacity", 1e-6)
                 .remove();
                 
+        },
+        // updates the data set for the chart
+        // I may just want to process the input and then call getData()
+        updateData : function(url, type) {
+            var container = this,
+                data = container.data;
+
+            d3.json(url, function(error, data) {
+                // data object
+                container.data = container.parseData(data);
+                container.updateChart();
+            });
         },
         setData : function(num) {
             var data = d3.range(num).map(function(i) {
@@ -191,11 +251,21 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                 .scale(this.yScale)
                 .orient("left");
         },
+        // gets data from a JSON request
+        getData : function() {
+            var container = this;
+            d3.json(container.opts.dataUrl, function(error, data) {
+                // data object
+                //container.data = container.parseData(data);
+                container.updateChart();
+            });
+        },
+        // updates the settings of the chart
         settings : function(settings) {
             // I need to sort out whether I want to refresh the graph when the settings are changed
             this.opts = Extend(true, {}, this.opts, settings);
             // will make custom function to handle setting changes
-            this.applySettings();
+            this.getData();
         },
         destroy : function() {
             this.el.removeAttribute(this.namespace);
