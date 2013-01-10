@@ -28,8 +28,8 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
     
     // these are the plugin default settings that will be over-written by user settings
     d3.Area.settings = {
-        'height': '930',
-        'width': '960',
+        'height': '730',
+        'width': '460',
         'speed' : 2000,  // transition speed
         'margin': {top: 30, right: 10, bottom: 30, left: 30},
         'data' : null,  // I'll need to figure out how I want to present data options to the user
@@ -37,16 +37,21 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
         'dataType' : 'json',
         'colorRange' : [], // instead of defining a color array, I will set a color scale and then let the user overwrite it
         // maybe only if there is one data set???
-        'colors' : {
-            'shape' : '#efefef',  // I'll have more than just circles here
-            'line' : 'black',  // the line on the graph
+        'elements' : {
+            'shape' : '#efefef',  // I'll have more than just circles here - set to null if no shape is wanted
+            'line' : 'black',  // the line on the graph - set to null if no line is wanted
             //'area' : 'white',  // I think if there are multiple areas, then I may use the colorRange
-            'dot' : '#ccc'
+            'dot' : '#ccc', // the dots on the line (I may make this a customisable shape though) - set to null if no dot is wanted
+            'x' : true, //  x-axis - set to null if not wanted - leaving the colors for the stylesheet
+            'y' : true //   y-axis - set to null if not wanted - leaving the colors for the stylesheet
         },
         'fontSize' : 12,
         'dataStructure' : {
-            'name' : 'name',
-            'value' : 'size'
+            'x' : 'x1',  // this value may end up being an array so I can support multiple data sets
+            'y' : 'y1',
+            'scale' : 'linear',
+            'ticksX' : 10,  // tha amount of ticks on the x-axis
+            'ticksY' : 5  // the amount of ticks on the y-axis
         },
         'chartName' : false  // If there is a chart name then insert the value. This allows for deep exploration to show category name
     };
@@ -54,24 +59,19 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
     // plugin functions go here
     d3.Area.prototype = {
         init : function() {
-
             var container = this;
 
             // build the chart with the data
             this.getData();
-
         },
         updateChart : function() {
-
             var container = this;
 
             container.margin = this.opts.margin,
             container.width = this.opts.width - container.margin.left - container.margin.right;
             container.height = this.opts.height - container.margin.top - container.margin.bottom; 
 
-            // define the data for the graph
-            //this.setData(30);
-            
+            // define the scale and axis' for the graph
             this.setScale();
             this.setAxis();
 
@@ -83,29 +83,10 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
             // define the area that sits under the line
             container.area = this.getArea();
 
-            // these two guys are going to need to be put into seperate functions that allow for multiple inputs
-            // add the line
-            container.chart.append("path")
-                .attr("class", "line")
-                .attr("d", container.line)
-                .style("stroke", container.opts.colors.line)
-            // add the area 
-            container.chart.append("path")
-                .attr("class", "area")
-                .attr("d", container.area)
-                .style("fill", container.opts.colors.shape);
-            
-            // will put more options in here to specify the dots
-            // add the dots to the line
-            container.chart.selectAll(".dot")
-                .data(container.data.filter(function(d) { return d.y; }))
-                .enter().append("circle")
-                .attr("class", "dot")
-                .attr("cx", container.line.x())
-                .attr("cy", container.line.y())
-                .attr("r", 3)
-                .style("fill", container.opts.colors.dot)
-                .style("stroke", container.opts.colors.line)
+            // add the elements to the chart
+            this.addElements();
+            // add the x and y axis to the chart
+            this.addAxis();
             
         },
         setLayout : function() {
@@ -126,7 +107,10 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                     .append("g")
                     .attr("class", "chart")
                     .attr("transform", "translate(" + container.margin.left + "," + container.margin.top + ")");
-            }
+            } 
+        },
+        addAxis : function() {
+            var container = this;
 
             // define the X and Y axis
             if (!container.X) {
@@ -150,11 +134,45 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                 .style("shape-rendering", "crispEdges")
                 .call(container.yAxis);
         },
+        addElements : function() {
+            var container = this;
+
+            // these two guys are going to need to be put into seperate functions that allow for multiple inputs
+            // add the line
+            if (container.opts.elements.shape) {
+                container.chart.append("path")
+                    .attr("class", "line")
+                    .attr("d", container.line)
+                    .style("stroke", container.opts.elements.line)
+            }
+
+            // add the area 
+            if (container.opts.elements.line) {
+                container.chart.append("path")
+                    .attr("class", "area")
+                    .attr("d", container.area)
+                    .style("fill", container.opts.elements.shape);
+            }
+
+            // add the dots to the line
+            // will put more options in here to specify the dots
+            if (container.opts.elements.dot) {
+                container.chart.selectAll(".dot")
+                    .data(container.data.filter(function(d) { return d[container.opts.dataStructure.y]; }))
+                    .enter().append("circle")
+                    .attr("class", "dot")
+                    .attr("cx", container.line.x())
+                    .attr("cy", container.line.y())
+                    .attr("r", 3)
+                    .style("fill", container.opts.elements.dot)
+                    .style("stroke", container.opts.elements.line);
+            }
+        },
         getLine : function() {
             var container = this;
             return d3.svg.line()
-                .x(function(d) { return container.xScale(d.x); })
-                .y(function(d) { return container.yScale(d.y); });
+                .x(function(d) { return container.xScale(d[container.opts.dataStructure.x]); })
+                .y(function(d) { return container.yScale(d[container.opts.dataStructure.y]); });
         },
         getArea : function() {
             var container = this;
@@ -164,6 +182,7 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                 .y0(container.yScale(0));
         },
         parseData : function(data) {
+            // I may want to flatten out nested data here. not sure yet
             return data;
         },
         // need to hook this up again
@@ -227,28 +246,43 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                 container.updateChart();
             });
         },
-        setData : function(num) {
-            var data = d3.range(num).map(function(i) {
-                return {x: i / (num-1), y: (Math.sin(i / 2) + 2) / 4};
-            });
-            this.data = data;
-        },
-        setScale : function(width, height) {
-            this.xScale = d3.scale.linear()
-                .domain([0, 1])
+        // need to do some thinking around these next 2 functions
+        // NOTE: there is SOO much to do in this function. definately will have to go back and make the scales more flexible
+        setScale : function() {
+            var container = this;
+
+            this.xScale = d3.scale[container.opts.dataStructure.scale]()
+                // setting the X scale domain to go from the min value to the max value of the data.x set
+                // if multiple areas on the chart, I will have to check all data sets before settings the domain
+                .domain([
+                    d3.min(container.data, function(d) {return d[container.opts.dataStructure.x]}),
+                    d3.max(container.data, function(d) {return d[container.opts.dataStructure.x]})
+                ])
+                // set the range to go from 0 to the width of the chart
                 .range([0, this.width]);
 
-            this.yScale = d3.scale.linear()
-                .domain([0, 1])
+            this.yScale = d3.scale[container.opts.dataStructure.scale]()
+                // setting the Y scale domain to go from 0 to the max value of the data.y set
+                .domain([
+                    0,
+                    d3.max(container.data, function(d) {return d[container.opts.dataStructure.y]})
+                ])
+                // set the range to go from 0 to the height of the chart
                 .range([this.height, 0]);
         },
         setAxis : function() {
+
+            var container = this;
+            // need to add tick options here
+
             this.xAxis = d3.svg.axis()
                 .scale(this.xScale)
+                .ticks(container.opts.dataStructure.ticksX)
                 .orient("bottom");
 
             this.yAxis = d3.svg.axis()
                 .scale(this.yScale)
+                .ticks(container.opts.dataStructure.ticksY)
                 .orient("left");
         },
         // gets data from a JSON request
@@ -265,7 +299,7 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                 var fileType = urlExt.match(regex)[0];
                 
                 if (fileType === ".json") {
-                    console.log('do json call');
+                    //console.log('do json call');
                     // build the chart
                     d3.json(container.opts.dataUrl, function(error, data) {
                         container.data = data;
@@ -273,10 +307,9 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                     });
                 }
                 else if (fileType === ".csv") {
-                    console.log('do csv call');
+                    //console.log('do csv call');
                     // build the chart
                     d3.csv(container.opts.dataUrl, function(error, data) {
-                        console.log(data);
                         container.data = data;
                         container.updateChart(); 
                     });
