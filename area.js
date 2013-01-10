@@ -142,9 +142,15 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
             if (container.opts.elements.shape) {
                 container.chart.append("path")
                     .attr("class", "line")
-                    .attr("d", container.line)
+                    //.attr("d", container.line)
                     .style("stroke", container.opts.elements.line)
             }
+            // update the chart line with the new data
+            container.chart.selectAll("path.line")
+                .data([container.data])
+                .transition()
+                .duration(500)
+                .attr("d", container.line);
 
             // add the area 
             if (container.opts.elements.line) {
@@ -153,6 +159,13 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                     .attr("d", container.area)
                     .style("fill", container.opts.elements.shape);
             }
+            // update the chart area with the new data
+            container.chart.selectAll("path.area")
+                .data([container.data])
+                .transition()
+                .duration(500)
+                .attr("d", container.area); 
+
 
             // add the dots to the line
             // will put more options in here to specify the dots
@@ -167,45 +180,8 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                     .style("fill", container.opts.elements.dot)
                     .style("stroke", container.opts.elements.line);
             }
-        },
-        getLine : function() {
-            var container = this;
-            return d3.svg.line()
-                .x(function(d) { return container.xScale(d[container.opts.dataStructure.x]); })
-                .y(function(d) { return container.yScale(d[container.opts.dataStructure.y]); });
-        },
-        getArea : function() {
-            var container = this;
-            return d3.svg.area()
-                .x(container.line.x())
-                .y1(container.line.y())
-                .y0(container.yScale(0));
-        },
-        parseData : function(data) {
-            // I may want to flatten out nested data here. not sure yet
-            return data;
-        },
-        // need to hook this up again
-        updateTheChartWithNewData : function() {
-            var container = this,
-                data = container.data;
-
-            // update the chart line with the new data
-            container.chart.selectAll("path.line")
-                .data([data])
-                .transition()
-                .duration(2000)
-                .attr("d", container.line);
-
-            // update the chart area with the new data
-            container.chart.selectAll("path.area")
-                .data([data])
-                .transition()
-                .duration(2000)
-                .attr("d", container.area); 
-            
             // get the dots on the line
-            var circle = container.chart.selectAll(".dot").data(data, function(d) {return d;});
+            var circle = container.chart.selectAll(".dot").data(container.data, function(d) {return d;});
             // add the new dots
             circle.enter().append("circle")
                 .attr("class", "dot")
@@ -231,20 +207,23 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                 .style("stroke-opacity", 1e-6)
                 .style("fill-opacity", 1e-6)
                 .remove();
-                
         },
-        // updates the data set for the chart
-        // I may just want to process the input and then call getData()
-        updateData : function(url, type) {
-            console.log("updating");
-            var container = this,
-                data = container.data;
-
-            d3.json(url, function(error, data) {
-                // data object
-                container.data = container.parseData(data);
-                container.updateChart();
-            });
+        getLine : function() {
+            var container = this;
+            return d3.svg.line()
+                .x(function(d) { return container.xScale(d[container.opts.dataStructure.x]); })
+                .y(function(d) { return container.yScale(d[container.opts.dataStructure.y]); });
+        },
+        getArea : function() {
+            var container = this;
+            return d3.svg.area()
+                .x(container.line.x())
+                .y1(container.line.y())
+                .y0(container.yScale(0));
+        },
+        parseData : function(data) {
+            // I may want to flatten out nested data here. not sure yet
+            return data;
         },
         // need to do some thinking around these next 2 functions
         // NOTE: there is SOO much to do in this function. definately will have to go back and make the scales more flexible
@@ -284,6 +263,16 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                 .scale(this.yScale)
                 .ticks(container.opts.dataStructure.ticksY)
                 .orient("left");
+        },
+        // updates the data set for the chart
+        // I may just want to process the input and then call getData()
+        updateData : function(data) {
+            console.log("updating");
+            var container = this;
+
+            container.opts.dataUrl = data;
+            this.getData();
+
         },
         // gets data from a JSON request
         getData : function() {

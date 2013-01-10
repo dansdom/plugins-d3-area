@@ -15,13 +15,13 @@
       var chart1 = document.getElementById("chart1");
       
       d3.area(chart1, {
-        'height': 150,
-        'width': 500,
+        'height': 250,
+        'width': 600,
         'dataUrl' : 'data2.csv'
       });
 
       function update() {
-        d3.area(chart1, "updateData");
+        d3.area(chart1, "updateData", "data1.csv");
       };
 
       function makeSineWave() {
