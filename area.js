@@ -33,15 +33,15 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
         'speed' : 2000,  // transition speed
         'margin': {top: 30, right: 10, bottom: 30, left: 30},
         'data' : null,  // I'll need to figure out how I want to present data options to the user
-        'dataUrl' : 'data.json',  // this is a url for a resource
+        'dataUrl' : null,  // this is a url for a resource
         'dataType' : 'json',
         'colorRange' : [], // instead of defining a color array, I will set a color scale and then let the user overwrite it
         // maybe only if there is one data set???
         'colors' : {
-            'shape' : 'red',  // I'll have more than just circles here
-            'line' : 'green',  // the line on the graph
-            'area' : 'blue',  // I think if there are multiple areas, then I may use the colorRange
-            'dot' : 'black'
+            'shape' : '#efefef',  // I'll have more than just circles here
+            'line' : 'black',  // the line on the graph
+            //'area' : 'white',  // I think if there are multiple areas, then I may use the colorRange
+            'dot' : '#ccc'
         },
         'fontSize' : 12,
         'dataStructure' : {
@@ -57,10 +57,6 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
 
             var container = this;
 
-            container.margin = this.opts.margin,
-            container.width = this.opts.width - container.margin.left - container.margin.right;
-            container.height = this.opts.height - container.margin.top - container.margin.bottom; 
-
             // build the chart with the data
             this.getData();
 
@@ -69,8 +65,12 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
 
             var container = this;
 
+            container.margin = this.opts.margin,
+            container.width = this.opts.width - container.margin.left - container.margin.right;
+            container.height = this.opts.height - container.margin.top - container.margin.bottom; 
+
             // define the data for the graph
-            this.setData(30);
+            //this.setData(30);
             
             this.setScale();
             this.setAxis();
@@ -135,8 +135,8 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
             container.X
                 .attr("class", "x-axis")
                 .attr("transform", "translate(0," + container.height + ")")
-                .style("fill", "none")  // I'm thinking about using the css file for these class styles. Will sleep on it
-                .style("stroke", "#000")
+                //.style("fill", "none")  // I'm thinking about using the css file for these class styles. Will sleep on it
+                //.style("stroke", "#000")
                 .style("shape-rendering", "crispEdges")
                 .call(container.xAxis);
 
@@ -145,13 +145,12 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
             }
             container.Y
                 .attr("class", "y-axis")
-                .style("fill", "none")
-                .style("stroke", "#000")
+                //.style("fill", "none")
+                //.style("stroke", "#000")
                 .style("shape-rendering", "crispEdges")
                 .call(container.yAxis);
         },
         getLine : function() {
-            // the 'd' here is the data object AHA!!!
             var container = this;
             return d3.svg.line()
                 .x(function(d) { return container.xScale(d.x); })
@@ -218,6 +217,7 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
         // updates the data set for the chart
         // I may just want to process the input and then call getData()
         updateData : function(url, type) {
+            console.log("updating");
             var container = this,
                 data = container.data;
 
@@ -254,11 +254,40 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
         // gets data from a JSON request
         getData : function() {
             var container = this;
-            d3.json(container.opts.dataUrl, function(error, data) {
-                // data object
-                //container.data = container.parseData(data);
-                container.updateChart();
-            });
+            
+            // check to see where the data is coming from
+            if (container.opts.dataUrl) {
+                // go get the data from an ajax call
+                // test whether it's json or csv
+                
+                var regex = /\.([0-9a-z]+)(?:[\?#]|$)/i;
+                var urlExt = container.opts.dataUrl.substring((container.opts.dataUrl.length - 5));
+                var fileType = urlExt.match(regex)[0];
+                
+                if (fileType === ".json") {
+                    console.log('do json call');
+                    // build the chart
+                    d3.json(container.opts.dataUrl, function(error, data) {
+                        container.data = data;
+                        container.updateChart(); 
+                    });
+                }
+                else if (fileType === ".csv") {
+                    console.log('do csv call');
+                    // build the chart
+                    d3.csv(container.opts.dataUrl, function(error, data) {
+                        console.log(data);
+                        container.data = data;
+                        container.updateChart(); 
+                    });
+                }
+            }
+            else {
+                // the data is passed straight into the plugin form either a function or a data object
+                // I expect a JSON object here
+                container.data = container.opts.data;
+                container.updateChart(); 
+            }    
         },
         // updates the settings of the chart
         settings : function(settings) {

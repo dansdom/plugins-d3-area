@@ -16,9 +16,25 @@
       
       d3.area(chart1, {
         'height': 250,
-        'width': 900
+        'width': 900,
+        'dataUrl' : 'data1.csv',
+        'data' : makeSineWave()
       });
+
+      function update() {
+        d3.area(chart1, "updateData");
+      };
+
+      function makeSineWave() {
+        var num = 40;
+        var data = d3.range(num).map(function(i) {
+                return {x: i / (num-1), y: (Math.sin(i / 2) + 2) / 4};
+            });
+
+        return data;
+      };
       
     </script>
+    <button id="btn1" onclick="update()">data 1</button>
   </body>
 </html>
