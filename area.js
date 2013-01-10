@@ -180,7 +180,21 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
             if (container.opts.elements.dot) {
                 
                 // get the dots on the line
-                container.circle = container.chart.selectAll(".dot").data(container.data.filter(function(d) { return d[container.opts.dataStructure.y]; }))
+                container.circle = container.chart.selectAll(".dot")
+                    .data(container.data.filter(function(d) { return d[container.opts.dataStructure.y]; }))
+
+                // current circles
+                container.circle
+                    .style("stroke-opacity", 1e-6)
+                    .style("fill-opacity", 1e-6)
+                    .attr("cx", container.line.x())
+                    .attr("cy", container.line.y())
+                    .transition()
+                  .delay(500)
+                    .duration(500)
+                    .style("stroke-opacity", 1)
+                    .style("fill-opacity", 1);
+
                 // add the new dots
                 container.circle.enter().append("circle")
                     .attr("class", "dot")
@@ -207,7 +221,6 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                     .style("stroke-opacity", 1e-6)
                     .style("fill-opacity", 1e-6)
                     .remove();
-
             }  
         },
         getLine : function() {
