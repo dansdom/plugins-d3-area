@@ -20,8 +20,12 @@
         'dataUrl' : 'data2.csv'
       });
 
-      function update() {
+      function update1() {
         d3.area(chart1, "updateData", "data1.csv");
+      };
+
+       function update2() {
+        d3.area(chart1, "updateData", "data2.csv");
       };
 
       function makeSineWave() {
@@ -34,6 +38,7 @@
       };
       
     </script>
-    <button id="btn1" onclick="update()">data 1</button>
+    <button id="btn1" onclick="update1()">data 1</button>
+    <button id="btn2" onclick="update2()">data 1</button>
   </body>
 </html>

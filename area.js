@@ -103,11 +103,12 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
 
             // define the chart element
             if (!container.chart) {
-                container.chart = container.svg
-                    .append("g")
-                    .attr("class", "chart")
-                    .attr("transform", "translate(" + container.margin.left + "," + container.margin.top + ")");
-            } 
+                container.chart = container.svg.append("g");
+                    
+            }
+            container.chart
+                .attr("class", "chart")
+                .attr("transform", "translate(" + container.margin.left + "," + container.margin.top + ")");
         },
         addAxis : function() {
             var container = this;
@@ -140,73 +141,74 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
             // these two guys are going to need to be put into seperate functions that allow for multiple inputs
             // add the line
             if (container.opts.elements.shape) {
-                container.chart.append("path")
-                    .attr("class", "line")
-                    //.attr("d", container.line)
-                    .style("stroke", container.opts.elements.line)
+                if (!container.path) {
+                    container.path = container.chart.append("path")
+                        .attr("class", "line")
+                        //.attr("d", container.line)
+                        .style("stroke", container.opts.elements.line)
+                }
+                // update the chart line with the new data
+                container.chart.selectAll("path.line")
+                    .data([container.data])
+                    .transition()
+                    .duration(500)
+                    .attr("d", container.line);
             }
-            // update the chart line with the new data
-            container.chart.selectAll("path.line")
-                .data([container.data])
-                .transition()
-                .duration(500)
-                .attr("d", container.line);
-
+            
             // add the area 
             if (container.opts.elements.line) {
-                container.chart.append("path")
-                    .attr("class", "area")
-                    .attr("d", container.area)
-                    .style("fill", container.opts.elements.shape);
+                if (!container.stuff) {
+                    container.stuff = container.chart.append("path"); 
+                }
             }
+            container.stuff
+                .attr("class", "area")
+                .attr("d", container.area)
+                .style("fill", container.opts.elements.shape);
+            
             // update the chart area with the new data
             container.chart.selectAll("path.area")
                 .data([container.data])
                 .transition()
                 .duration(500)
-                .attr("d", container.area); 
-
+                .attr("d", container.area)
+                .style("fill", container.opts.elements.shape);
+            
 
             // add the dots to the line
             // will put more options in here to specify the dots
             if (container.opts.elements.dot) {
-                container.chart.selectAll(".dot")
-                    .data(container.data.filter(function(d) { return d[container.opts.dataStructure.y]; }))
-                    .enter().append("circle")
+                
+                // get the dots on the line
+                container.circle = container.chart.selectAll(".dot").data(container.data.filter(function(d) { return d[container.opts.dataStructure.y]; }))
+                // add the new dots
+                container.circle.enter().append("circle")
                     .attr("class", "dot")
                     .attr("cx", container.line.x())
                     .attr("cy", container.line.y())
-                    .attr("r", 3)
+                    .attr("r", 3.5)
                     .style("fill", container.opts.elements.dot)
-                    .style("stroke", container.opts.elements.line);
-            }
-            // get the dots on the line
-            var circle = container.chart.selectAll(".dot").data(container.data, function(d) {return d;});
-            // add the new dots
-            circle.enter().append("circle")
-                .attr("class", "dot")
-                .attr("cx", container.line.x())
-                .attr("cy", container.line.y())
-                .attr("r", 3.5)
-                .style("stroke-opacity", 1e-6)
-                .style("fill-opacity", 1e-6)
-            // define the transition of the new circles
-              .transition()
-              .delay(1000)
-                .duration(500)
-                .attr("cx", container.line.x())
-                .attr("cy", container.line.y())
-                .style("stroke-opacity", 1)
-                .style("fill-opacity", 1);
+                    .style("stroke", container.opts.elements.line)
+                    .style("stroke-opacity", 1e-6)
+                    .style("fill-opacity", 1e-6)
+                // define the transition of the new circles
+                  .transition()
+                  .delay(500)
+                    .duration(500)
+                    .attr("cx", container.line.x())
+                    .attr("cy", container.line.y())
+                    .style("stroke-opacity", 1)
+                    .style("fill-opacity", 1);
 
-            // remove the old ones
-            circle.exit()
-              .transition()
-                .duration(500)
-                //.attr("cy", 1000)
-                .style("stroke-opacity", 1e-6)
-                .style("fill-opacity", 1e-6)
-                .remove();
+                // remove the old ones
+                container.circle.exit()
+                  .transition()
+                    .duration(500)
+                    .style("stroke-opacity", 1e-6)
+                    .style("fill-opacity", 1e-6)
+                    .remove();
+
+            }  
         },
         getLine : function() {
             var container = this;
