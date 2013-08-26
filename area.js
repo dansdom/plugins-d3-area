@@ -10,9 +10,7 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
     // Plugin namespace definition
     d3.Area = function (options, element, callback)
     {
-        // wrap the element in the jQuery object
         this.el = element;
-
         // this is the namespace for all bound event handlers in the plugin
         this.namespace = "area";
         // extend the settings object with the options, make a 'deep' copy of the object using an empty 'holding' object
@@ -43,8 +41,22 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
             //'area' : 'white',  // I think if there are multiple areas, then I may use the colorRange
             'dot' : '#fdd0a2', // the dots on the line (I may make this a customisable shape though) - set to null if no dot is wanted
             'dotRadius' : 3.5,  // 0 will show no dots
-            'x' : true, //  x-axis - set to null if not wanted - leaving the colors for the stylesheet
-            'y' : true //   y-axis - set to null if not wanted - leaving the colors for the stylesheet
+            'xAxis' : {
+                'visible' : true,
+                'tickSize' : 5,
+                'label' : true,
+                'labelOffsetX' : 0,
+                'labelOffsetY' : 40,
+                'labelRotate' : 0
+            },
+            'yAxis' : {
+                'visible' : true,
+                'tickSize' : 5,
+                'label' : true,
+                'labelOffsetX' : -40,
+                'labelOffsetY' : 0,
+                'labelRotate' : -90
+            }
         },
         'fontSize' : 12,
         'dataStructure' : {
@@ -123,29 +135,103 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                 .attr("transform", "translate(" + container.margin.left + "," + container.margin.top + ")");
         },
         addAxis : function() {
-            var container = this;
+            var container = this,
+                elementOpts = container.opts.elements;
 
-            // define the X and Y axis
-            if (!container.X) {
-                container.X = container.chart.append("g")
+            // if we are building an x-axis
+            if (elementOpts.xAxis.visible) {
+                // look to see if it is already defined
+                if (!container.X) {
+                    container.X = container.chart.append("g");   
+                }
+                // style the x-axis
+                container.X
+                    .attr("class", "x-axis")
+                    .attr("transform", "translate(0," + container.height + ")")
+                    .style("shape-rendering", "crispEdges")
+                    .call(container.xAxis);
+                // add the labels
+                container.addXLabels();
             }
-            container.X
-                .attr("class", "x-axis")
-                .attr("transform", "translate(0," + container.height + ")")
-                //.style("fill", "none")  // I'm thinking about using the css file for these class styles. Will sleep on it
-                //.style("stroke", "#000")
-                .style("shape-rendering", "crispEdges")
-                .call(container.xAxis);
+            // else if the x-axis exists then remove it
+            else if (container.X) {
+                container.X.remove();
+                // I have to set this to undefined so that I can test for it again
+                container.X = undefined;
+                containerXLabel = undefined;
+            }
 
-            if (!container.Y) {
-                container.Y = container.chart.append("g")
+            // if we are building a y-axis
+            if (elementOpts.yAxis.visible) {
+                // look to see if it is already defined
+                if (!container.Y) {
+                    container.Y = container.chart.append("g");
+                }
+                container.Y
+                    .attr("class", "y-axis")
+                    .style("shape-rendering", "crispEdges")
+                    .call(container.yAxis);
+                // add the labels
+                container.addYLabels();
             }
-            container.Y
-                .attr("class", "y-axis")
-                //.style("fill", "none")
-                //.style("stroke", "#000")
-                .style("shape-rendering", "crispEdges")
-                .call(container.yAxis);
+            // else if the -axis exists then remove it
+            else if (container.Y) {
+                container.Y.remove();
+                container.Y = undefined;
+                container.YLabel = undefined;
+            }
+        },
+        addXLabels : function() {
+            var container = this,
+                xOpts = container.opts.elements.xAxis;
+
+            if (xOpts.label) {
+                if (!container.XLabel) {
+                    container.XLabel = container.X.append("text");
+                }
+                // add the settings to the label
+                container.XLabel
+                    .attr("dx", function() {
+                        var chartLength = container.width,
+                            labelPosition = (chartLength/2) + xOpts.labelOffsetX;
+                        return labelPosition;
+                    })
+                    .attr("dy", xOpts.labelOffsetY)
+                    .style("shape-rendering", "crispEdges")
+                    .attr("transform", "rotate(" + xOpts.labelRotate + ")")
+                    .text(container.opts.dataStructure.x);
+            }
+            // else remove the label
+            else {
+                container.XLabel.remove();
+                container.XLabel = undefined;
+            }
+        },
+        addYLabels : function() {
+            var container = this,
+                yOpts = container.opts.elements.yAxis;
+
+            if (yOpts.label) {
+                if (!container.YLabel) {
+                    container.YLabel = container.Y.append("text");
+                }
+                container.YLabel
+                    .attr("dy", yOpts.labelOffsetX)
+                    // note, this is tricky because of the rotation it is actually the "dx" value that gives the vertical positon and not the "dy" value
+                    .attr("dx", function() {
+                        var chartHeight = container.height,
+                            labelPosition = (chartHeight/2) + yOpts.labelOffsetY;
+                        return -labelPosition;
+                    })
+                    .style("shape-rendering", "crispEdges")
+                    .attr("transform", "rotate(" + yOpts.labelRotate + ")")
+                    .text(container.opts.dataStructure.y);
+            }
+            // else remove the label
+            else {
+                container.YLabel.remove();
+                container.YLabel = undefined;
+            }
         },
         addElements : function() {
             var container = this;
@@ -355,15 +441,16 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
 
             var container = this;
             // need to add tick options here
-
-            this.xAxis = d3.svg.axis()
-                .scale(this.xScale)
+            container.xAxis = d3.svg.axis()
+                .scale(container.xScale)
                 .ticks(container.opts.dataStructure.ticksX)
+                .tickSize(container.opts.elements.xAxis.tickSize)
                 .orient("bottom");
 
-            this.yAxis = d3.svg.axis()
-                .scale(this.yScale)
+            container.yAxis = d3.svg.axis()
+                .scale(container.yScale)
                 .ticks(container.opts.dataStructure.ticksY)
+                .tickSize(container.opts.elements.yAxis.tickSize)
                 .orient("left");
         },
         // updates the data set for the chart
@@ -371,7 +458,7 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
         updateData : function(data) {
             var container = this;
 
-            //container.opts.dataUrl = data;
+            container.opts.dataUrl = data;
             this.getData();
         },
         // gets data from a JSON request
