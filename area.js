@@ -29,7 +29,7 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
         'height': '730',
         'width': '460',
         'speed' : 2000,  // transition speed
-        'margin': {top: 30, right: 10, bottom: 30, left: 30},
+        'margin': {top: 30, right: 10, bottom: 80, left: 80},
         'data' : null,  // I'll need to figure out how I want to present data options to the user
         'dataUrl' : null,  // this is a url for a resource
         'dataType' : 'json',
@@ -51,7 +51,7 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
             },
             'yAxis' : {
                 'visible' : true,
-                'tickSize' : 5,
+                'tickSize' : 10,
                 'label' : true,
                 'labelOffsetX' : -40,
                 'labelOffsetY' : 0,
