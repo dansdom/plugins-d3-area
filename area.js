@@ -58,7 +58,6 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                 'labelRotate' : -90
             }
         },
-        'fontSize' : 12,
         'dataStructure' : {
             'x' : 'x1',  // this value may end up being an array so I can support multiple data sets
             'y' : 'y1',
