@@ -133,6 +133,20 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                 .attr("class", "chart")
                 .attr("transform", "translate(" + container.margin.left + "," + container.margin.top + ")");
         },
+        setTitle : function() {
+            var container = this;
+
+            if (container.opts.chartName) {
+                if (!container.chartName) {
+                    container.chartName = container.chart.append("g")
+                        .attr("class", "chartName")
+                        .append("text");
+                        //console.log('adding chart name');
+                }
+                container.chartName = container.chart.select(".chartName").select("text")
+                    .text(container.opts.chartName);
+            }
+        },
         addAxis : function() {
             var container = this,
                 elementOpts = container.opts.elements;
@@ -437,7 +451,6 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
             }
         },
         setAxis : function() {
-
             var container = this;
             // need to add tick options here
             container.xAxis = d3.svg.axis()
