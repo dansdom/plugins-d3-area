@@ -18,8 +18,7 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
         this.opts = Extend(true, {}, d3.Area.settings, options);
         this.init();
         // run the callback function if it is defined
-        if (typeof callback === "function")
-        {
+        if (typeof callback === "function") {
             callback.call();
         }
     };
@@ -100,17 +99,14 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
 
             // create the svg element that holds the chart
             this.setLayout();
-
             // define the line of the chart
             container.line = this.getLine();
             // define the area that sits under the line
             container.area = this.getArea();
-
             // add the elements to the chart
             this.addElements();
             // add the x and y axis to the chart
             this.addAxis();
-            
         },
         setLayout : function() {
             var container = this;
@@ -404,8 +400,7 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
             var container = this;
 
             // set the X scale
-            container.xScale = d3.scale[container.opts.scale.x]()
-
+            container.xScale = d3.scale[container.opts.scale.x]();
             if (container.opts.scale.x === "linear") {
                 // setting the X scale domain to go from the min value to the max value of the data.x set
                 // if multiple areas on the chart, I will have to check all data sets before settings the domain
@@ -428,8 +423,8 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
 
 
             // if the scale is ordinal then add the rangeBounds - e.g.: .rangeRoundBands([0, width], .1);  (http://bl.ocks.org/3885304)
-            container.yScale = d3.scale[container.opts.scale.y]()
-                // setting the Y scale domain to go from 0 to the max value of the data.y set
+            container.yScale = d3.scale[container.opts.scale.y]();
+            // setting the Y scale domain to go from 0 to the max value of the data.y set
             if (container.opts.scale.y === "linear") {
                 container.yScale
                     .domain([
