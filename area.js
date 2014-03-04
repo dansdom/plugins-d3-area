@@ -95,7 +95,7 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                 container.color = d3.scale.category20();
             }
 
-            container.margin = this.opts.margin,
+            container.margin = this.opts.margin;
             container.width = this.opts.width - container.margin.left - container.margin.right;
             container.height = this.opts.height - container.margin.top - container.margin.bottom; 
 
@@ -178,7 +178,7 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                 container.X.remove();
                 // I have to set this to undefined so that I can test for it again
                 container.X = undefined;
-                containerXLabel = undefined;
+                container.XLabel = undefined;
             }
 
             // if we are building a y-axis
@@ -305,7 +305,7 @@ var Extend = Extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                     .style("fill", container.opts.colorRange[i])
                     .style("fill-opacity", container.opts.elements.areaOpacity);
                 
-                container.updateGroup(currentGroup, container.dataLayers[i], i);
+                container.updateGroup(currentGroup, d, i);
             });
         },
         // adds new groups to the chart
