@@ -231,7 +231,7 @@ var extend = extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
 
                     currentGroup.select("rect")
                         .attr({
-                            "fill" : function(d) { return container.opts.colorRange[i]; },
+                            "fill" : function(d) { return container.color(i); },
                             "width" : legendOpts.size,
                             "height" : legendOpts.size,
                             "x" : function() { //container.width
@@ -280,7 +280,7 @@ var extend = extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
 
                     currentGroup.append("rect")
                         .attr({
-                            "fill" : function(d) { return container.opts.colorRange[i]; },
+                            "fill" : function(d) { return container.color(i); },
                             "width" : legendOpts.size,
                             "height" : legendOpts.size,
                             "x" : function() { //container.width
@@ -470,12 +470,12 @@ var extend = extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                 // make the transitions for each of the current groups
                 currentGroup.select(".line")
                     .attr("d", function(d) { return container.line(d.values); })
-                    .style("stroke", container.opts.colorRange[i]);
+                    .style("stroke", container.color(i));
 
                 currentGroup.select(".area")
                     .attr("d", function(d) { return container.area(d.values); })
                     .style({
-                        "fill" : container.opts.colorRange[i],
+                        "fill" : container.color(i),
                         "fill-opacity" : container.opts.elements.areaOpacity
                     });
 
@@ -495,7 +495,7 @@ var extend = extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                             "class" : "line",
                             "d" : function(d) { return container.line(d.values); }
                         })
-                        .style("stroke", container.opts.colorRange[i]);
+                        .style("stroke", container.color(i));
 
                     currentGroup.append("path")
                         .attr({
@@ -503,7 +503,7 @@ var extend = extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                             "d" : function(d) { return container.area(d.values); }
                         })
                         .style({
-                            "fill" : container.opts.colorRange[i],
+                            "fill" : container.color(i),
                             "fill-opacity" : container.opts.elements.areaOpacity
                         });
 
@@ -537,8 +537,8 @@ var extend = extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                     .duration(500)
                     .attr("r", elements.dotRadius)
                     .style({
-                        "fill" : container.opts.colorRange[i],
-                        "stroke" : container.opts.colorRange[i],
+                        "fill" : container.color(i),
+                        "stroke" : container.color(i),
                         "stroke-opacity" : function(d) {
                             if (d.y > 0) { return 1; } else { return 0; }
                         },
@@ -556,8 +556,8 @@ var extend = extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                         "r" : elements.dotRadius
                     })
                     .style({
-                        "fill" : container.opts.colorRange[i],
-                        "stroke" : container.opts.colorRange[i],
+                        "fill" : container.color(i),
+                        "stroke" : container.color(i),
                         "stroke-opacity" : 1e-6,
                         "fill-opacity" : 1e-6
                     })
@@ -612,8 +612,8 @@ var extend = extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                         "height" : elements.squareSize
                     })
                     .style({
-                        "fill" : container.opts.colorRange[i],
-                        "stroke" : container.opts.colorRange[i],
+                        "fill" : container.color(i),
+                        "stroke" : container.color(i),
                         "stroke-opacity" : function(d) {
                             if (d.y > 0) { return 1; } else { return 0; }
                         },
@@ -632,8 +632,8 @@ var extend = extend || function(){var h,g,b,e,i,c=arguments[0]||{},f=1,k=argumen
                         "height" : elements.squareSize
                     })
                     .style({
-                        "fill" : container.opts.colorRange[i],
-                        "stroke" : container.opts.colorRange[i],
+                        "fill" : container.color(i),
+                        "stroke" : container.color(i),
                         "stroke-opacity" : 1e-6,
                         "fill-opacity" : 1e-6
                     })
