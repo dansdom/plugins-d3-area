@@ -13,11 +13,28 @@
     <script type="text/javascript">
 
       var chart1 = document.getElementById("chart1");
+      var chart2 = document.getElementById("chart2");
       
       d3.area(chart1, {
         'height': 250,
         'width': 600,
         'dataUrl' : 'data2.csv'
+      });
+
+      d3.area(chart2, {
+        'height': 250,
+        'width': 600,
+        'dataUrl' : 'data.json',
+        'dataStructure' : {
+          'x' : 'name',
+          'y' : 'value'
+        },
+        'scale' : {
+          'x' : 'ordinal'
+        },
+        'tooltip' : {
+          'id' : 'tool2'
+        }
       });
 
       function update1() {
